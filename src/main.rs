@@ -1,20 +1,52 @@
-use std::{env, io, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}};
+use std::{
+    env,
+    io,
+    io::{prelude::*, BufReader},
+    net::{TcpListener, TcpStream},
+    thread,
+    time::Duration
+};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let address = (&args[1]).clone();
     let opt_type = (&args[2]).clone();
-    let opt_listen = "listen".to_string();
-    let opt_send = "send".to_string();
-    if opt_type == opt_listen {
-        listen(address);
-    }else if opt_type == opt_send {
-        let message = &args[3];
-        println!("{:?}", send(address, message.clone()));
+
+    let mut message = &"None".to_string();
+    let mut num = 1;
+    let mut time = 500;
+
+    match &opt_type[..] {
+        "listen" => listen(address.clone()),
+        "send" => {
+            message = &args[3];
+        },
+        "sendn" => {
+            message = &args[3];
+            num = args[4].clone().parse().unwrap();
+
+        },
+        "sends" => {
+            message = &args[3];
+            num = args[4].clone().parse().unwrap();
+            time = args[5].clone().parse().unwrap();
+        },
+        _ => ()
+    }
+
+    if num == -1 {
+        loop {
+            println!("{:?}", send(address.clone(), message.clone()));
+            thread::sleep(Duration::from_millis(time));
+        }
+    }
+    for _ in 0..num {
+        println!("{:?}", send(address.clone(), message.clone()));
+        thread::sleep(Duration::from_millis(time));
     }
 }
 
-fn listen(address: String){
+fn listen(address: String) -> !{
     // 监听地址: 127.0.0.1:7878
     let listener = TcpListener::bind(address).unwrap();
 
@@ -24,7 +56,7 @@ fn listen(address: String){
         handle_connection(stream);
     }
 
-
+    panic!("Listening end unexpected!");
 }
 
 fn handle_connection(mut stream: TcpStream) {
