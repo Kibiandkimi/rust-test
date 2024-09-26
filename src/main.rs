@@ -19,6 +19,7 @@ fn main() {
     match &opt_type[..] {
         "listen" => listen(address.clone()),
         "stall" => stall(address.clone()),
+        "flood" => flood(address.clone()),
         "send" => {
             message = &args[3];
         },
@@ -82,4 +83,12 @@ fn stall(address: String) -> ! {
         let mut stream = TcpStream::connect(address.clone());
     }
     panic!("Stall end Unexpected!");
+}
+
+fn flood(address: String) -> ! {
+    loop {
+        let mut stream = TcpStream::connect(address.clone()).unwrap();
+        stream.write("message".as_bytes()).expect("Fail to write!");
+    }
+    panic!("Flood end Unexpected!");
 }
