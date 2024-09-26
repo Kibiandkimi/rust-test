@@ -81,6 +81,7 @@ fn send(address: String, message: String) -> io::Result<()>{
 fn stall(address: String) -> ! {
     loop {
         let mut stream = TcpStream::connect(address.clone());
+        thread::sleep(Duration::from_millis(10000));
     }
     panic!("Stall end Unexpected!");
 }
