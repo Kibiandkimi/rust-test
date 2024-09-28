@@ -1,11 +1,4 @@
-use std::{
-    env,
-    io,
-    io::{prelude::*, BufReader},
-    net::{TcpListener, TcpStream},
-    thread,
-    time::Duration
-};
+use std::{env, fs, io, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, thread, time::Duration};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -15,6 +8,7 @@ fn main() {
     let mut message = &"None".to_string();
     let mut num = 1;
     let mut time = 500;
+    let temp;
 
     match &opt_type[..] {
         "listen" => listen(address.clone()),
@@ -22,6 +16,11 @@ fn main() {
         "flood" => flood(address.clone()),
         "send" => {
             message = &args[3];
+        },
+        "sendf" => {
+            let path = &args[3];
+            temp = fs::read_to_string(path).unwrap();
+            message = &temp;
         },
         "sendn" => {
             message = &args[3];
@@ -80,10 +79,11 @@ fn send(address: String, message: String) -> io::Result<()>{
 
 fn stall(address: String) -> ! {
     loop {
-        let mut stream = TcpStream::connect(address.clone());
+        let mut stream = TcpStream::connect(address.clone()).unwrap();
         thread::sleep(Duration::from_millis(10000));
+        stream.write("hello".as_bytes()).unwrap();
     }
-    panic!("Stall end Unexpected!");
+    // panic!("Stall end Unexpected!");
 }
 
 fn flood(address: String) -> ! {
@@ -91,5 +91,5 @@ fn flood(address: String) -> ! {
         let mut stream = TcpStream::connect(address.clone()).unwrap();
         stream.write("message".as_bytes()).expect("Fail to write!");
     }
-    panic!("Flood end Unexpected!");
+    // panic!("Flood end Unexpected!");
 }
