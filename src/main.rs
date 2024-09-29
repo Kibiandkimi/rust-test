@@ -13,7 +13,10 @@ fn main() {
 
     match &opt_type[..] {
         "listen" => listen(address.clone()),
-        "stall" => stall(address.clone()),
+        "stall" => loop{
+            let res = stall(address.clone());
+            println!("{:?}", res);
+        },
         "flood" => loop{
             let res = flood(address.clone());
             println!("{:?}", res);
@@ -81,12 +84,15 @@ fn send(address: String, message: String) -> io::Result<()>{
     Ok(())
 }
 
-fn stall(address: String) -> ! {
+fn stall(address: String) -> Result<(), Box<dyn Error>> {
     loop {
-        let mut stream = TcpStream::connect(address.clone()).unwrap();
-        stream.write("hello".as_bytes()).unwrap();
+        let mut stream = TcpStream::connect(address.clone())?;
+        stream.set_nodelay(true);
+        stream.write("hello".as_bytes())?;
+        stream.flush()?;
         thread::sleep(Duration::from_millis(10000));
-        stream.write("hello".as_bytes()).unwrap();
+        stream.write("hello".as_bytes())?;
+        stream.flush()?;
     }
     // panic!("Stall end Unexpected!");
 }
