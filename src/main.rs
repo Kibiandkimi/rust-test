@@ -16,7 +16,7 @@ fn main() {
         "stall" => stall(address.clone()),
         "flood" => loop{
             let res = flood(address.clone());
-            println!("{res}");
+            println!("{:?}", res);
         },
         "send" => {
             message = &args[3];
@@ -91,7 +91,7 @@ fn stall(address: String) -> ! {
     // panic!("Stall end Unexpected!");
 }
 
-fn flood(address: String) -> Result<(), dyn Error> {
+fn flood(address: String) -> Result<(), Box<dyn Error>> {
     let mut stream = TcpStream::connect(address.clone())?;
     loop {
         stream.write("message".as_bytes())?;
