@@ -92,14 +92,16 @@ fn send(address: String, message: String) -> io::Result<()>{
 }
 
 async fn stall(address: String) -> Result<(), Box<dyn Error>> {
+    use tokio::net::{TcpListener, TcpStream};
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     loop {
-        let mut stream = TcpStream::connect(address.clone())?;
+        let mut stream = TcpStream::connect(&address).await?;
         stream.set_nodelay(true);
-        stream.write("hello".as_bytes())?;
-        stream.flush()?;
+        stream.write_all("hello".as_bytes()).await?;
+        // stream.flush()?;
         thread::sleep(Duration::from_millis(10000));
-        stream.write("hello".as_bytes())?;
-        stream.flush()?;
+        stream.write_all("hello".as_bytes()).await?;
+        // stream.flush()?;
     }
     // panic!("Stall end Unexpected!");
 }
