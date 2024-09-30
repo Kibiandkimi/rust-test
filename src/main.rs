@@ -16,8 +16,9 @@ async fn main() {
     match &opt_type[..] {
         "listen" => listen(address.clone()),
         "stall" => {
+            let task_num: u32 = (&args[3]).clone().parse().unwrap();
             let (tx, mut rx) = mpsc::channel(32);
-            for i in 0..10 {
+            for i in 0..task_num {
                 let address = address.clone();
                 let tx = tx.clone();
                 tokio::spawn(async move {
