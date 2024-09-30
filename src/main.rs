@@ -1,7 +1,8 @@
 use std::{env, fs, io, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, thread, time::Duration};
 use std::error::Error;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args: Vec<String> = env::args().collect();
     let address = (&args[1]).clone();
     let opt_type = (&args[2]).clone();
@@ -13,9 +14,15 @@ fn main() {
 
     match &opt_type[..] {
         "listen" => listen(address.clone()),
-        "stall" => loop{
-            let res = stall(address.clone());
-            println!("{:?}", res);
+        "stall" => for _ in 0..100{
+            let address = address.clone();
+            tokio::spawn(async move {
+                loop {
+                    let address = address.clone();
+                    let res = stall(address).await;
+                    println!("{:?}", res);
+                }
+            });
         },
         "flood" => loop{
             let res = flood(address.clone());
@@ -84,7 +91,7 @@ fn send(address: String, message: String) -> io::Result<()>{
     Ok(())
 }
 
-fn stall(address: String) -> Result<(), Box<dyn Error>> {
+async fn stall(address: String) -> Result<(), Box<dyn Error>> {
     loop {
         let mut stream = TcpStream::connect(address.clone())?;
         stream.set_nodelay(true);
