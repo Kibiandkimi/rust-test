@@ -1,4 +1,5 @@
 use std::{env, fs, io, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, thread, time::Duration};
+use tokio::sync::mpsc;
 use std::error::Error;
 
 #[tokio::main]
@@ -14,15 +15,25 @@ async fn main() {
 
     match &opt_type[..] {
         "listen" => listen(address.clone()),
-        "stall" => for _ in 0..100{
-            let address = address.clone();
-            tokio::spawn(async move {
-                loop {
-                    let address = address.clone();
-                    let res = stall(address).await;
-                    println!("{:?}", res);
-                }
-            });
+        "stall" => {
+            let (tx, mut rx) = mpsc::channel(32);
+            for i in 0..10 {
+                let address = address.clone();
+                let tx = tx.clone();
+                tokio::spawn(async move {
+                    // let address = address.clone();
+                    loop {
+                        {
+                            let _ = stall(address.clone()).await;
+                        }
+                        let _ = tx.send(i).await;
+                        // println!("{:?}", res);
+                    }
+                });
+            }
+            while let Some(i) = rx.recv().await {
+                println!("{i} stall error.");
+            }
         },
         "flood" => loop{
             let res = flood(address.clone());
@@ -92,11 +103,11 @@ fn send(address: String, message: String) -> io::Result<()>{
 }
 
 async fn stall(address: String) -> Result<(), Box<dyn Error>> {
-    use tokio::net::{TcpListener, TcpStream};
-    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::{TcpStream};
+    use tokio::io::{AsyncWriteExt};
     loop {
         let mut stream = TcpStream::connect(&address).await?;
-        stream.set_nodelay(true);
+        // stream.set_nodelay(true);
         stream.write_all("hello".as_bytes()).await?;
         // stream.flush()?;
         thread::sleep(Duration::from_millis(10000));
